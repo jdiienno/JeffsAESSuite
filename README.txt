@@ -66,11 +66,11 @@ Mode: ECB
 key: exampleKey
 iv: exampleIV
 
-To encrpyt 'exampleImage.png' and save the encrypted image as 'exampleOutput.png' use:
+To encrpyt use:
 import jeffsAESSuite
 jeffsAESSuite.encrypt('exampleImage.png', 'exampleOutput.png', 'ECB', 'exampleKey', 'exampleIV')
 
-To decrypt'exampleImage.png' and save the decrypted image as 'exampleOutput.png' use: 
+To decrypt use: 
 import jeffsAESSuite
 jeffsAESSuite.decrypt('exampleImage.png', 'exampleOutput.png', 'ECB', 'exampleKey', 'exampleIV')
 
