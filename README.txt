@@ -9,6 +9,7 @@ Python Packages:
 - random
 - hashlib
 
+This "package" was developed and debugged using Pycharm Community Edition 2020.3.3, so I can only guarantee it will work in there, but it should work regardless of environment so long as the required Python version and packages are used.
 
 **************
 * How to Use *
@@ -16,6 +17,8 @@ Python Packages:
 Download jeffsAESSuite.py and drop it into your project in a place where you can import it. I would suggest putting it in the root file, as that's the easiest method. 
 
 In your script import jeffsAESSuite. Now you can use the AES Suite.
+
+For University of Delaware class 21S-CPEG672-610 Assignment 2, the encrypted images are saved in the "Encrypted Images" folder at github.com/jdiienno/JeffsAESSuite. The passwords are saved in the file "passwords.txt" also at github.com/jdiienno/JeffsAESSuite. AES mode is stated in the encrypted file name (i.e. ECB mode was used to create the encrypted image saved as 'ecbEncrypt.png')
 
 Please only use .png Images. I have only tested this with .png files, so I am unsure if it will work with other types of image files.
 
@@ -36,11 +39,11 @@ NOTE: These commands will both print to the Python Console. The output is in the
 *************
 * Arguments *
 *************
-inputLocation (string): Location of the image being encrypted or decrypted
+inputLocation (string): Location of the image being encrypted or decrypted.
 
-outputLocation(string): Location where the encrypted or decrypted image will be saved
+outputLocation(string): Location where the encrypted or decrypted image will be saved. Image base save folder must already exist, this Suite will not create new folders to save in.
 
-mode (string): AES mode of operation. Use the abreviation of the mode as the argument (i.e. 'ECB' for Electronic Code Book)
+mode (string): AES mode of operation. Use the abreviation of the mode as the argument (i.e. 'ECB' for Electronic Code Book). It is not case sensitve, so an argument of 'ecb' will work.
 	Available Modes:
 	Electronic Code Book (ECB)
 	Cipher Block Chaining (CBC)
@@ -57,17 +60,18 @@ iv (string): Initialization Vector (or nonce in the case of CTR mode).
 ***********
 NOTE: The mechanics are the same for encryption or decryption, the only difference will be the function used
 
-Input file Location: exampleImage.png
-Output file location: exampleOutput.png
+Input file Location: exampleImage.png (located in the root)
+Output file location: exampleOutput.png (located in the root)
 Mode: ECB
 key: exampleKey
 iv: exampleIV
 
 To encrpyt 'exampleImage.png' and save the encrypted image as 'exampleOutput.png' use:
-Import jeffsAESSuite
+import jeffsAESSuite
 jeffsAESSuite.encrypt('exampleImage.png', 'exampleOutput.png', 'ECB', 'exampleKey', 'exampleIV')
 
 To decrypt'exampleImage.png' and save the decrypted image as 'exampleOutput.png' use: 
+import jeffsAESSuite
 jeffsAESSuite.decrypt('exampleImage.png', 'exampleOutput.png', 'ECB', 'exampleKey', 'exampleIV')
 
 
