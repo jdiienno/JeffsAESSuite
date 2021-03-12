@@ -1,8 +1,14 @@
 ****************
 * Requirements *
 ****************
-Python 3.9.1
-Pillow 8.1.0
+Python Version:
+- Python 3.9.1
+
+Python Packages:
+- Pillow 8.1.0
+- random
+- hashlib
+
 
 **************
 * How to Use *
