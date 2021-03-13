@@ -138,6 +138,11 @@ def _convertImageToBinaryChunks(imageLoc, chunkSize = 512):
     pixelValues = list(tImage.getdata())
     imageSize = tImage.size
 
+    # Convert non-tuples in the image pixel values to tuples
+    for i in range(len(pixelValues)):
+        if isinstance(pixelValues[i], int):
+            pixelValues[i] = (pixelValues[i], pixelValues[i], pixelValues[i])
+
     # Concatinate binary strings
     fullBinaryStr = '0b'
     for i in pixelValues:
@@ -232,6 +237,7 @@ def convertBinaryToTuple(binaryIn, numBits=8):
 def _convertTupleToBinary(tupleIn, numBits=8):
     # Initialize the output
     strOut = '0b'
+
     for i in tupleIn:
         strOut += _convertIntToBinary(i, numBits)[2::]
 
@@ -404,6 +410,13 @@ def _convertKeyToFourKeys(key):
     K = [fullK[i:i + n] for i in range(0, len(fullK), n)]
     return K
 
+# Convert Int Image to Tuple Image: ************************************************************************************
+# Handle single value tuple in
+    # Probably the worst place to fix this but I caught it so late I don't really feel like doing it at the beginning.
+    # If time allows, detect single value pixel images and convert that into tuples rather than doing it here
+    # THIS IS A MAJOR POTENTIAL BUG AREA!!!
+    # if isinstance(tupleIn, int):
+    #     tupleIn = (tupleIn, tupleIn, tupleIn)
 # Public Functions: ****************************************************************************************************
 ########################################################################################################################
 # Do Encryption: *******************************************************************************************************
