@@ -466,6 +466,9 @@ def encrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
         # Convert this to RGB tuples
         rgbTuples = _convertBinaryChunksToRgbTuples(eText)
 
+        # Write our output
+        _saveTupleListAsImage(rgbTuples, imSize, saveLoc)
+
     elif bcType == 'aes':
         print('Performing AES Encryption...')
         # Convert key and IV into something useable
@@ -486,20 +489,33 @@ def encrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
             print('Invalid Decryption Mode Entered')
             return
 
-        # Decrypt the data
+        # Encrypt the data
         im = Image.open(imageLoc)
         imSize = im.size
         imageBytesOut = cipher.encrypt(im.tobytes())
 
-        # Convert bytes to RGB tuples
-        rgbTuples = _convertBytesToRgbTuples(imageBytesOut)
+        # Save data
+        t = Image.new(im.mode, imSize)
+
+        # Convert Byte String to data
+        if im.mode.lower() == 'l':
+            dataVals = []
+            for b in imageBytesOut:
+                dataVals.append(b)
+        elif im.mode.lower() == 'rgb':
+            dataVals = _convertBytesToRgbTuples(imageBytesOut)
+        else:
+            print('Invalid image type. Cannot convert decrypted data to image.')
+            return
+
+        t.putdata(dataVals)
+        t.save(saveLoc)
 
     else:
         print('Invalid BC type entered (Feistel or AES)')
         return
 
-    # Write our output
-    _saveTupleListAsImage(rgbTuples, imSize, saveLoc)
+
 
     # Return IV and key
 
@@ -540,6 +556,9 @@ def decrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
         # Convert this to RGB tuples
         rgbTuples = _convertBinaryChunksToRgbTuples(eText)
 
+        # Write our output
+        _saveTupleListAsImage(rgbTuples, imSize, saveLoc)
+
     elif bcType == 'aes':
         print('Performing AES Decryption...')
         # Convert key and IV into something useable
@@ -563,15 +582,29 @@ def decrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
         # Decrypt the data
         im = Image.open(imageLoc)
         imSize = im.size
+
         imageBytesOut = cipher.decrypt(im.tobytes())
 
-        # Convert bytes to RGB tuples
-        rgbTuples = _convertBytesToRgbTuples(imageBytesOut)
+        # Save data
+        t = Image.new(im.mode, imSize)
+
+        # Convert Byte String to data
+        dataVals = []
+        if im.mode.lower() == 'l':
+            for b in imageBytesOut:
+                dataVals.append(b)
+        elif im.mode.lower() == 'rgb':
+            dataVals = _convertBytesToRgbTuples(imageBytesOut)
+        else:
+            print('Invalid image type. Cannot convert decrypted data to image.')
+            return
+
+        t.putdata(dataVals)
+        t.save(saveLoc)
 
     else:
         print('Invalid BC type entered (Feistel or AES)')
         return
 
-    # Write our output
-    _saveTupleListAsImage(rgbTuples, imSize, saveLoc)
+
     print('AES Decryption Complete!')
