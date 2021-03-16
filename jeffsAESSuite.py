@@ -2,6 +2,7 @@
 import hashlib
 from PIL import Image
 import random
+from Crypto.Cipher import AES
 
 # "Private" Functions: *************************************************************************************************
 ########################################################################################################################
@@ -175,6 +176,24 @@ def _convertImageToBinaryChunks(imageLoc, chunkSize = 512):
 
     # Return what we want
     return plainChunks, imageSize
+
+# Convert Bytes to RGB tuples: *****************************************************************************************
+def _convertBytesToRgbTuples(b):
+    # Convert to rgb values
+    rgbList = []
+    for c in b:
+        rgbList.append(c)
+
+    # Convert this list to tuple
+    tupleList = []
+    tupleGroups = [rgbList[i:i + 3] for i in range(0, len(rgbList), 3)]
+    count = 0
+    for i in tupleGroups:
+        tTuple = (i[0], i[1], i[2])
+        tupleList.append(tTuple)
+
+    # Return the tuple list
+    return tupleList
 
 # Convert Binary chunks to image: **************************************************************************************
 def _convertBinaryChunksToRgbTuples(binChunks):
@@ -413,71 +432,146 @@ def _convertKeyToFourKeys(key):
 # Public Functions: ****************************************************************************************************
 ########################################################################################################################
 # Do Encryption: *******************************************************************************************************
-def encrypt(imageLoc, saveLoc, aMode, key, IV):
-    # Convert key to 4 keys
-    K = _convertKeyToFourKeys(key)
+def encrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
 
-    # Convert original image to binary
-    x = _convertImageToBinaryChunks(imageLoc)
-    binChunks = x[0]
-    imSize = x[1]
+    bcType = bcType.lower()
+    if bcType == 'feistel':
+        # Convert key to 4 keys
+        K = _convertKeyToFourKeys(key)
 
-    # Convert IV to integer
-    IVint = int(''.join(str(ord(c)) for c in IV))
+        # Convert original image to binary
+        x = _convertImageToBinaryChunks(imageLoc)
+        binChunks = x[0]
+        imSize = x[1]
 
-    # Do the Encryption
-    aMode = aMode.lower()
-    if aMode == 'cbc':
-        eText = _cbcEncryption(binChunks, IVint, K)
-    elif aMode == 'ctr':
-        eText = _ctrEncryption(binChunks, IVint, K)
-    elif aMode == 'ecb':
-        eText = _ecbEncryption(binChunks, K)
-    elif aMode == 'ofb':
-        eText = _ofbEncryption(binChunks, IVint, K)
-    elif aMode == 'ofbbad':
-        eText = _ofbEncryption(binChunks, IVint, [key]*4)
+        # Convert IV to integer
+        IVint = int(''.join(str(ord(c)) for c in IV))
+
+        # Do the decryption
+        aMode = aMode.lower()
+        if aMode == 'cbc':
+            eText = _cbcEncryption(binChunks, IVint, K)
+        elif aMode == 'ctr':
+            eText = _ctrEncryption(binChunks, IVint, K)
+        elif aMode == 'ecb':
+            eText = _ecbEncryption(binChunks, K)
+        elif aMode == 'ofb':
+            eText = _ofbEncryption(binChunks, IVint, K)
+        elif aMode == 'ofbbad':
+            eText = _ofbEncryption(binChunks, IVint, [key] * 4)
+        else:
+            print('Invalid Encryption Mode Entered')
+            return
+
+        # Convert this to RGB tuples
+        rgbTuples = _convertBinaryChunksToRgbTuples(eText)
+
+    elif bcType == 'aes':
+        print('Performing AES Encryption...')
+        # Convert key and IV into something useable
+        key = bytearray.fromhex(hashlib.sha256(key.encode('utf-8')).hexdigest())
+        iv = bytearray.fromhex(hashlib.sha256(IV.encode('utf-8')).hexdigest()[0:32])
+
+        # Determine the decryption mode
+        aMode = aMode.lower()
+        if aMode == 'cbc':
+            cipher = AES.new(key, AES.MODE_CBC, iv)
+        elif aMode == 'ctr':
+            cipher = AES.new(key, AES.MODE_CTR, nonce=iv[0:8])
+        elif aMode == 'ecb':
+            cipher = AES.new(key, AES.MODE_ECB)
+        elif aMode == 'ofb':
+            cipher = AES.new(key, AES.MODE_OFB, iv)
+        else:
+            print('Invalid Decryption Mode Entered')
+            return
+
+        # Decrypt the data
+        im = Image.open(imageLoc)
+        imSize = im.size
+        imageBytesOut = cipher.encrypt(im.tobytes())
+
+        # Convert bytes to RGB tuples
+        rgbTuples = _convertBytesToRgbTuples(imageBytesOut)
+
     else:
-        print('Invalid Encryption Mode Entered')
+        print('Invalid BC type entered (Feistel or AES)')
         return
-
-    # Convert this to RGB tuples
-    rgbTuples = _convertBinaryChunksToRgbTuples(eText)
 
     # Write our output
     _saveTupleListAsImage(rgbTuples, imSize, saveLoc)
+
+    # Return IV and key
+
+    print('AES Encryption Complete!')
 
 # Do Decryption: *******************************************************************************************************
-def decrypt(imageLoc, saveLoc, aMode, key, IV):
-    # Convert key to 4 keys
-    K = _convertKeyToFourKeys(key)
+def decrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
 
-    # Convert original image to binary
-    x = _convertImageToBinaryChunks(imageLoc)
-    binChunks = x[0]
-    imSize = x[1]
+    bcType = bcType.lower()
+    if bcType == 'feistel':
+        # Convert key to 4 keys
+        K = _convertKeyToFourKeys(key)
 
-    # Convert IV to integer
-    IVint = int(''.join(str(ord(c)) for c in IV))
+        # Convert original image to binary
+        x = _convertImageToBinaryChunks(imageLoc)
+        binChunks = x[0]
+        imSize = x[1]
 
-    # Do the decryption
-    aMode = aMode.lower()
-    if aMode == 'cbc':
-        eText = _cbcDecryption(binChunks, IVint, K)
-    elif aMode == 'ctr':
-        eText = _ctrDecryption(binChunks, IVint, K)
-    elif aMode == 'ecb':
-        eText = _ecbDecryption(binChunks, K)
-    elif aMode == 'ofb':
-        eText = _ofbDecryption(binChunks, IVint, K)
-    elif aMode == 'ofbbad':
-        eText = _ofbDecryption(binChunks, IVint, [key] * 4)
+        # Convert IV to integer
+        IVint = int(''.join(str(ord(c)) for c in IV))
+
+        # Do the decryption
+        aMode = aMode.lower()
+        if aMode == 'cbc':
+            eText = _cbcDecryption(binChunks, IVint, K)
+        elif aMode == 'ctr':
+            eText = _ctrDecryption(binChunks, IVint, K)
+        elif aMode == 'ecb':
+            eText = _ecbDecryption(binChunks, K)
+        elif aMode == 'ofb':
+            eText = _ofbDecryption(binChunks, IVint, K)
+        elif aMode == 'ofbbad':
+            eText = _ofbDecryption(binChunks, IVint, [key] * 4)
+        else:
+            print('Invalid Decryption Mode Entered')
+            return
+
+        # Convert this to RGB tuples
+        rgbTuples = _convertBinaryChunksToRgbTuples(eText)
+
+    elif bcType == 'aes':
+        print('Performing AES Decryption...')
+        # Convert key and IV into something useable
+        key = bytearray.fromhex(hashlib.sha256(key.encode('utf-8')).hexdigest())
+        iv = bytearray.fromhex(hashlib.sha256(IV.encode('utf-8')).hexdigest()[0:32])
+
+        # Determine the decryption mode
+        aMode = aMode.lower()
+        if aMode == 'cbc':
+            cipher = AES.new(key, AES.MODE_CBC, iv)
+        elif aMode == 'ctr':
+            cipher = AES.new(key, AES.MODE_CTR, nonce=iv[0:8])
+        elif aMode == 'ecb':
+            cipher = AES.new(key, AES.MODE_ECB)
+        elif aMode == 'ofb':
+            cipher = AES.new(key, AES.MODE_OFB, iv)
+        else:
+            print('Invalid Decryption Mode Entered')
+            return
+
+        # Decrypt the data
+        im = Image.open(imageLoc)
+        imSize = im.size
+        imageBytesOut = cipher.decrypt(im.tobytes())
+
+        # Convert bytes to RGB tuples
+        rgbTuples = _convertBytesToRgbTuples(imageBytesOut)
+
     else:
-        print('Invalid Decryption Mode Entered')
+        print('Invalid BC type entered (Feistel or AES)')
         return
-
-    # Convert this to RGB tuples
-    rgbTuples = _convertBinaryChunksToRgbTuples(eText)
 
     # Write our output
     _saveTupleListAsImage(rgbTuples, imSize, saveLoc)
+    print('AES Decryption Complete!')
