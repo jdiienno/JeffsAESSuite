@@ -6,6 +6,7 @@ Python Version:
 
 Python Packages:
 - Pillow 8.1.0
+- pycryptodome 3.10.1
 - random (the one included with Python)
 - hashlib (the one included with Python)
 
