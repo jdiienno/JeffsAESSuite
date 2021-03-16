@@ -472,8 +472,8 @@ def encrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
     elif bcType == 'aes':
         print('Performing AES Encryption...')
         # Convert key and IV into something useable
-        key = bytearray.fromhex(hashlib.sha256(key.encode('utf-8')).hexdigest())
-        iv = bytearray.fromhex(hashlib.sha256(IV.encode('utf-8')).hexdigest()[0:32])
+        key = hashlib.sha256(key.encode('utf-8')).digest()
+        iv = hashlib.sha256(IV.encode('utf-8')).digest()[0:16]
 
         # Determine the decryption mode
         aMode = aMode.lower()
@@ -562,8 +562,8 @@ def decrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
     elif bcType == 'aes':
         print('Performing AES Decryption...')
         # Convert key and IV into something useable
-        key = bytearray.fromhex(hashlib.sha256(key.encode('utf-8')).hexdigest())
-        iv = bytearray.fromhex(hashlib.sha256(IV.encode('utf-8')).hexdigest()[0:32])
+        key = hashlib.sha256(key.encode('utf-8')).digest()
+        iv = hashlib.sha256(IV.encode('utf-8')).digest()[0:16]
 
         # Determine the decryption mode
         aMode = aMode.lower()
@@ -597,7 +597,7 @@ def decrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
             dataVals = _convertBytesToRgbTuples(imageBytesOut)
         else:
             print('Invalid image type. Cannot convert decrypted data to image.')
-            return
+
 
         t.putdata(dataVals)
         t.save(saveLoc)
