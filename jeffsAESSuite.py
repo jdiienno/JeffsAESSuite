@@ -460,7 +460,7 @@ def encrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
         elif aMode == 'ofbbad':
             eText = _ofbEncryption(binChunks, IVint, [key] * 4)
         else:
-            print('Invalid Encryption Mode Entered')
+            print('Invalid or Unsupported Encryption Mode Entered')
             return
 
         # Convert this to RGB tuples
@@ -485,6 +485,8 @@ def encrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
             cipher = AES.new(key, AES.MODE_ECB)
         elif aMode == 'ofb':
             cipher = AES.new(key, AES.MODE_OFB, iv)
+        elif aMode == 'gcm':
+            cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
         else:
             print('Invalid Decryption Mode Entered')
             return
@@ -550,7 +552,7 @@ def decrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
         elif aMode == 'ofbbad':
             eText = _ofbDecryption(binChunks, IVint, [key] * 4)
         else:
-            print('Invalid Decryption Mode Entered')
+            print('Invalid or unsupported Decryption Mode Entered')
             return
 
         # Convert this to RGB tuples
@@ -575,6 +577,8 @@ def decrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
             cipher = AES.new(key, AES.MODE_ECB)
         elif aMode == 'ofb':
             cipher = AES.new(key, AES.MODE_OFB, iv)
+        elif aMode == 'gcm':
+            cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
         else:
             print('Invalid Decryption Mode Entered')
             return

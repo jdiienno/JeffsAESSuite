@@ -50,10 +50,11 @@ mode (string): AES mode of operation. Use the abreviation of the mode as the arg
 	Cipher Block Chaining (CBC)
 	Output Feedback Mode (OFB)
 	Counter Mode (CTR)
+	Galois Counter Mode (GCM) (Only supported with AES)
 
 key (string): Key used for block cipher encryption/decryption
 
-iv (string): Initialization Vector (or nonce in the case of CTR mode). This will be converted to a byte string of length 16 in CBC and OFB mode, and converted to a byte string of length 8 in the CTR mode. Also converted to a byte string of length 16 for EBC but it is not actually used.
+iv (string): Initialization Vector (or nonce in the case of CTR mode). This will be converted to a byte string of length 16 in CBC, OFB, and GCM modes, and converted to a byte string of length 8 in the CTR mode. Also converted to a byte string of length 16 for EBC but it is not actually used.cipher
 
 cipherBlockType (string): The cipher block type, either AES or Feistel. If no input then it'll use AES
 
