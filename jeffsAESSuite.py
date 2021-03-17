@@ -58,7 +58,7 @@ def _feistelEncrpytion(valIn, K):
     binIn = list(_convertIntToBinary(valIn, 512))
 
     # define number of iterations
-    numIts = 1
+    numIts = 5000
 
     # Split into left and right parts
     Rstring = '0b' + _listToString(binIn[258:514])
@@ -102,7 +102,7 @@ def _feistelDecrpytion(valIn, K):
     Rstring = '0b' + _listToString(binIn[2:258])
 
     # Define Number of iterations
-    numIts = 1
+    numIts = 5000
 
     # Get F0
     F = _superHash(str(_convertBinaryToInt(Lstring)), K[3], numIts)
@@ -440,7 +440,7 @@ def _convertByteMessageToPlainText(msgBytes):
 # Public Functions: ****************************************************************************************************
 ########################################################################################################################
 # Do Encryption: *******************************************************************************************************
-def encrypt(imageLoc, saveLoc, aMode, key=-1, IV=-1, bcType='AES', counter = -1):
+def encrypt(imageLoc, saveLoc, aMode, key=-1, IV=-1, bcType='AES'):
 
     bcType = bcType.lower()
     # Handle missing key
@@ -544,7 +544,9 @@ def encrypt(imageLoc, saveLoc, aMode, key=-1, IV=-1, bcType='AES', counter = -1)
         print('Invalid BC type entered (Feistel or AES)')
         return
 
-
+    # Get original image hash
+    im = Image.open(imageLoc)
+    tHash = hashlib.sha256(im.tobytes()).hexdigest()
 
     # Return IV and key
     if isinstance(keyToReturn, bytes):
@@ -553,10 +555,10 @@ def encrypt(imageLoc, saveLoc, aMode, key=-1, IV=-1, bcType='AES', counter = -1)
         iv = IV
 
     if aMode == 'aes':
-        return keyToReturn, iv, counter, cipher
+        return keyToReturn, iv, tHash, cipher
     else:
         IVstr = str(''.join(str(chr(int(c))) for c in list(str(IVint))))
-        return keyToReturn, IVstr, counter
+        return keyToReturn, IVstr, tHash
 
 # Do Decryption: *******************************************************************************************************
 def decrypt(imageLoc, saveLoc, aMode, key, IV=-1, bcType='AES', imHash = -1):
@@ -645,3 +647,5 @@ def decrypt(imageLoc, saveLoc, aMode, key, IV=-1, bcType='AES', imHash = -1):
         tHash = hashlib.sha256(im.tobytes()).hexdigest()
         if tHash == imHash:
             print('Image was correctly decrypted!')
+        else:
+            print('Image was not correctly decrypted =(')
