@@ -21,7 +21,7 @@ In your script import jeffsAESSuite. Now you can use the AES Suite.
 
 For University of Delaware class 21S-CPEG672-610 Assignment 2, the encrypted images are saved in the "AES Encrypted Images" and "Feistel Encrypted Images" folder at github.com/jdiienno/JeffsAESSuite. The passwords are saved in the file "passwords.txt" also at github.com/jdiienno/JeffsAESSuite. The Block Cipher type is in the main folder name (AES or Feistel). The Block Cipher mode is stated in the encrypted file name (i.e. ECB mode was used to create the encrypted image saved as 'ecbEncrypt.png')
 
-Please only use .png Images. I have only tested this with .png files, so I am unsure if it will work with other types of image files. On this note, only .pngs of type 'L' and 'RGB' are supported.
+Please only use .png Images. I have only tested this with .png files, so I am unsure if it will work with other types of image files. On this note, only .pngs of type 'L' and 'RGB' are supported for encryption, and only .pngs of type 'RGB' are supported for decryption.
 
 Also note that when using the Feistel Block Cipher these do take a while (5-10 minutes per image).
 
