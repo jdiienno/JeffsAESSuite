@@ -53,7 +53,7 @@ mode (string): AES mode of operation. Use the abreviation of the mode as the arg
 
 key (string): Key used for block cipher encryption/decryption
 
-iv (string): Initialization Vector (or nonce in the case of CTR mode).
+iv (string): Initialization Vector (or nonce in the case of CTR mode). This will be converted to a byte string of length 16 in CBC and OFB mode, and converted to a byte string of length 8 in the CTR mode. Also converted to a byte string of length 16 for EBC but it is not actually used.
 
 cipherBlockType (string): The cipher block type, either AES or Feistel. If no input then it'll use AES
 
