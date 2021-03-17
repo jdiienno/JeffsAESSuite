@@ -58,7 +58,7 @@ def _feistelEncrpytion(valIn, K):
     binIn = list(_convertIntToBinary(valIn, 512))
 
     # define number of iterations
-    numIts = 5000
+    numIts = 1
 
     # Split into left and right parts
     Rstring = '0b' + _listToString(binIn[258:514])
@@ -102,7 +102,7 @@ def _feistelDecrpytion(valIn, K):
     Rstring = '0b' + _listToString(binIn[2:258])
 
     # Define Number of iterations
-    numIts = 5000
+    numIts = 1
 
     # Get F0
     F = _superHash(str(_convertBinaryToInt(Lstring)), K[3], numIts)
@@ -429,13 +429,27 @@ def _convertKeyToFourKeys(key):
     K = [fullK[i:i + n] for i in range(0, len(fullK), n)]
     return K
 
+# Convert Byte Message to plain text: **********************************************************************************
+def _convertByteMessageToPlainText(msgBytes):
+    msgAsStr = ''
+    for i in msgBytes:
+        msgAsStr += chr(i)
+
+    return msgAsStr
+
 # Public Functions: ****************************************************************************************************
 ########################################################################################################################
 # Do Encryption: *******************************************************************************************************
-def encrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
+def encrypt(imageLoc, saveLoc, aMode, key=-1, IV=-1, bcType='AES', counter = -1):
 
     bcType = bcType.lower()
+    # Handle missing key
+    if key == -1:
+        key = str(random.randint(0, 2**256-1))
     if bcType == 'feistel':
+        key = str(key)
+        keyToReturn = key
+
         # Convert key to 4 keys
         K = _convertKeyToFourKeys(key)
 
@@ -444,8 +458,12 @@ def encrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
         binChunks = x[0]
         imSize = x[1]
 
-        # Convert IV to integer
-        IVint = int(''.join(str(ord(c)) for c in IV))
+        # Handle missing IV
+        if IV == -1 and aMode != 'ebc':
+            IVint = random.randint(0, 2**256-1)
+        else:
+            # Convert IV to integer
+            IVint = int(''.join(str(ord(c)) for c in IV))
 
         # Do the decryption
         aMode = aMode.lower()
@@ -472,46 +490,55 @@ def encrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
     elif bcType == 'aes':
         print('Performing AES Encryption...')
         # Convert key and IV into something useable
+        keyToReturn = key
         key = hashlib.sha256(key.encode('utf-8')).digest()
-        iv = hashlib.sha256(IV.encode('utf-8')).digest()[0:16]
+        if IV != -1:
+            iv = hashlib.sha256(IV.encode('utf-8')).digest()[0:16]
 
         # Determine the decryption mode
         aMode = aMode.lower()
         if aMode == 'cbc':
-            cipher = AES.new(key, AES.MODE_CBC, iv)
+            if IV == -1:
+                cipher = AES.new(key, AES.MODE_CBC)
+                iv = cipher.iv
+            else:
+                cipher = AES.new(key, AES.MODE_CBC, iv)
         elif aMode == 'ctr':
-            cipher = AES.new(key, AES.MODE_CTR, nonce=iv[0:8])
+            if IV == -1:
+                cipher = AES.new(key, AES.MODE_CTR)
+                iv = cipher.nonce
+            else:
+                cipher = AES.new(key, AES.MODE_CTR, nonce=iv[0:8])
         elif aMode == 'ecb':
             cipher = AES.new(key, AES.MODE_ECB)
+            iv = -1
         elif aMode == 'ofb':
-            cipher = AES.new(key, AES.MODE_OFB, iv)
+            if IV == -1:
+                cipher = AES.new(key, AES.MODE_OFB)
+                iv = cipher.iv
+            else:
+                cipher = AES.new(key, AES.MODE_OFB, iv)
         elif aMode == 'gcm':
-            cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
+            if IV == -1:
+                cipher = AES.new(key, AES.MODE_GCM)
+                iv = cipher.nonce
+            else:
+                cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
         else:
             print('Invalid Decryption Mode Entered')
             return
 
+        # Convert iv and key to string
         # Encrypt the data
         im = Image.open(imageLoc)
         imSize = im.size
         imageBytesOut = cipher.encrypt(im.tobytes())
 
-        # Save data
-        t = Image.new(im.mode, imSize)
-
-        # Convert Byte String to data
-        if im.mode.lower() == 'l':
-            dataVals = []
-            for b in imageBytesOut:
-                dataVals.append(b)
-        elif im.mode.lower() == 'rgb':
-            dataVals = _convertBytesToRgbTuples(imageBytesOut)
-        else:
-            print('Invalid image type. Cannot convert decrypted data to image.')
-            return
-
-        t.putdata(dataVals)
+        # Save the Data
+        t = Image.frombytes(im.mode, imSize, imageBytesOut)
         t.save(saveLoc)
+
+        print('AES Encryption Complete!')
 
     else:
         print('Invalid BC type entered (Feistel or AES)')
@@ -520,11 +547,22 @@ def encrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
 
 
     # Return IV and key
+    if isinstance(keyToReturn, bytes):
+        keyToReturn = _convertByteMessageToPlainText(keyToReturn)
+    if IV != -1:
+        iv = IV
 
-    print('AES Encryption Complete!')
+    if aMode == 'aes':
+        return keyToReturn, iv, counter, cipher
+    else:
+        IVstr = str(''.join(str(chr(int(c))) for c in list(str(IVint))))
+        return keyToReturn, IVstr, counter
 
 # Do Decryption: *******************************************************************************************************
-def decrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
+def decrypt(imageLoc, saveLoc, aMode, key, IV=-1, bcType='AES', imHash = -1):
+    if IV == -1 and aMode.lower() != 'ecb':
+        print('Cannot perform decryption. No valid IV entered.')
+        return
 
     bcType = bcType.lower()
     if bcType == 'feistel':
@@ -565,7 +603,10 @@ def decrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
         print('Performing AES Decryption...')
         # Convert key and IV into something useable
         key = hashlib.sha256(key.encode('utf-8')).digest()
-        iv = hashlib.sha256(IV.encode('utf-8')).digest()[0:16]
+        if aMode.lower() != 'ecb' and isinstance(IV, str):
+            iv = hashlib.sha256(IV.encode('utf-8')).digest()[0:16]
+        else:
+            iv = IV
 
         # Determine the decryption mode
         aMode = aMode.lower()
@@ -586,29 +627,21 @@ def decrypt(imageLoc, saveLoc, aMode, key, IV, bcType='AES'):
         # Decrypt the data
         im = Image.open(imageLoc)
         imSize = im.size
-
         imageBytesOut = cipher.decrypt(im.tobytes())
 
-        # Save data
-        t = Image.new(im.mode, imSize)
-
-        # Convert Byte String to data
-        dataVals = []
-        if im.mode.lower() == 'l':
-            for b in imageBytesOut:
-                dataVals.append(b)
-        elif im.mode.lower() == 'rgb':
-            dataVals = _convertBytesToRgbTuples(imageBytesOut)
-        else:
-            print('Invalid image type. Cannot convert decrypted data to image.')
-
-
-        t.putdata(dataVals)
+        # Save the Data
+        t = Image.frombytes(im.mode, imSize, imageBytesOut)
         t.save(saveLoc)
+
+        print('AES Decryption Complete!')
 
     else:
         print('Invalid BC type entered (Feistel or AES)')
         return
 
-
-    print('AES Decryption Complete!')
+    # Determine if the image is the same as the one that was sent
+    if imHash != -1:
+        im = Image.open(saveLoc)
+        tHash = hashlib.sha256(im.tobytes()).hexdigest()
+        if tHash == imHash:
+            print('Image was correctly decrypted!')
