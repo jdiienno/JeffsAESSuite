@@ -54,7 +54,7 @@ aMode (string) (optional): AES mode of operation. Use the abreviation of the mod
 
 key (string) (optional for encryption): Key used for block cipher encryption/decryption. If no key is defined for encryption a key will be randomnly generated.
 
-iv (string) (optional for encryption.: Initialization Vector (or nonce in the case of CTR mode). This will be converted to a byte string of length 16 in CBC, OFB, and GCM modes, and converted to a byte string of length 8 in the CTR mode. Also converted to a byte string of length 16 for EBC but it is not actually used. If no IV is defined for encryption an IV will be randomly generated.
+IV (string) (optional for encryption.: Initialization Vector (or nonce in the case of CTR mode). This will be converted to a byte string of length 16 in CBC, OFB, and GCM modes, and converted to a byte string of length 8 in the CTR mode. Also converted to a byte string of length 16 for EBC but it is not actually used. If no IV is defined for encryption an IV will be randomly generated.
 
 bcType (string) (optional): The cipher block type, either AES or Feistel. If no input then it'll use AES
 
