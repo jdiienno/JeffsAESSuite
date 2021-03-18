@@ -56,7 +56,7 @@ key (string) (optional for encryption): Key used for block cipher encryption/dec
 
 IV (string) (optional for encryption.: Initialization Vector (or nonce in the case of CTR mode). This will be converted to a byte string of length 16 in CBC, OFB, and GCM modes, and converted to a byte string of length 8 in the CTR mode. Also converted to a byte string of length 16 for EBC but it is not actually used. If no IV is defined for encryption an IV will be randomly generated.
 
-bcType (string) (optional): The cipher block type, either AES or Feistel. If no input then it'll use AES. NOTE: only AES-256 is supported.
+bcType (string) (optional): The block cipher type, either AES or Feistel. If no input then it'll use AES. NOTE: only AES-256 is supported.
 
 imHash (string of hex values) (optional) (Decryption only): A string hex that is the sha256 hash of the encrypted image. If defined the decryption method will check if the decrypted image matches the hash.
 
