@@ -554,7 +554,7 @@ def encrypt(imageLoc, saveLoc, aMode, key=-1, IV=-1, bcType='AES'):
     if IV != -1:
         iv = IV
 
-    if aMode == 'aes':
+    if bcType.lower() == 'aes':
         return keyToReturn, iv, tHash, cipher
     else:
         IVstr = str(''.join(str(chr(int(c))) for c in list(str(IVint))))
