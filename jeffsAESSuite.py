@@ -441,8 +441,11 @@ def _convertByteMessageToPlainText(msgBytes):
 ########################################################################################################################
 # Do Encryption: *******************************************************************************************************
 def encrypt(imageLoc, saveLoc, aMode, key=-1, IV=-1, bcType='AES'):
-
+    # Initialize an output
+    padOut = -1
+    # Lower the bcType
     bcType = bcType.lower()
+
     # Handle missing key
     if key == -1:
         key = str(random.randint(0, 2**256-1))
@@ -532,7 +535,17 @@ def encrypt(imageLoc, saveLoc, aMode, key=-1, IV=-1, bcType='AES'):
         # Encrypt the data
         im = Image.open(imageLoc)
         imSize = im.size
-        imageBytesOut = cipher.encrypt(im.tobytes())
+        tData = im.tobytes()
+
+        # Add a pad if needed
+        if aMode == 'cbc' or aMode == 'ecb':
+            length = AES.block_size - (len(im.tobytes()) % AES.block_size)
+            tData += bytes([length])*length
+        imageBytesOut = cipher.encrypt(tData)
+
+        # Store the encrypted pad data
+        if aMode == 'cbc' or aMode == 'ecb':
+            padOut = imageBytesOut[-length::]
 
         # Save the Data
         t = Image.frombytes(im.mode, imSize, imageBytesOut)
@@ -555,13 +568,13 @@ def encrypt(imageLoc, saveLoc, aMode, key=-1, IV=-1, bcType='AES'):
         iv = IV
 
     if bcType.lower() == 'aes':
-        return keyToReturn, iv, tHash, cipher
+        return keyToReturn, iv, tHash, padOut, cipher
     else:
         IVstr = str(''.join(str(chr(int(c))) for c in list(str(IVint))))
         return keyToReturn, IVstr, tHash
 
 # Do Decryption: *******************************************************************************************************
-def decrypt(imageLoc, saveLoc, aMode, key, IV=-1, bcType='AES', imHash = -1):
+def decrypt(imageLoc, saveLoc, aMode, key, IV=-1, bcType='AES', imHash = -1, padIn = -1):
     if IV == -1 and aMode.lower() != 'ecb':
         print('Cannot perform decryption. No valid IV entered.')
         return
@@ -629,7 +642,14 @@ def decrypt(imageLoc, saveLoc, aMode, key, IV=-1, bcType='AES', imHash = -1):
         # Decrypt the data
         im = Image.open(imageLoc)
         imSize = im.size
-        imageBytesOut = cipher.decrypt(im.tobytes())
+        tData = im.tobytes()
+
+        # Handle padding
+        if padIn != -1:
+            tData += padIn
+
+        # Decrypt
+        imageBytesOut = cipher.decrypt(tData)
 
         # Save the Data
         t = Image.frombytes(im.mode, imSize, imageBytesOut)
