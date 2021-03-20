@@ -133,9 +133,11 @@ def _feistelDecrpytion(valIn, K):
     return outStr
 
 # Convert Image to binary chunks: **************************************************************************************
-def _convertImageToBinaryChunks(imageLoc, chunkSize = 512):
+def _convertImageToBinaryChunks(imageLoc, chunkSize = 512, padIn=0):
     # Load the image
     tImage = Image.open(imageLoc)
+    if tImage.mode != 'RGB':
+        tImage.convert('RGB')
     pixelValues = list(tImage.getdata())
     imageSize = tImage.size
 
@@ -143,6 +145,8 @@ def _convertImageToBinaryChunks(imageLoc, chunkSize = 512):
     for i in range(len(pixelValues)):
         if isinstance(pixelValues[i], int):
             pixelValues[i] = (pixelValues[i], pixelValues[i], pixelValues[i])
+        elif len(pixelValues[i]) > 3:
+            pixelValues[i] = (pixelValues[i][1], pixelValues[i][2], pixelValues[i][3])
 
     # Concatinate binary strings
     fullBinaryStr = '0b'
@@ -154,18 +158,21 @@ def _convertImageToBinaryChunks(imageLoc, chunkSize = 512):
     # We also assume chunk size is a multiple of 8 so this should always remove
     # IF we want chunk sizes that are not multiples of 8 we will have to revisit
     # It should also be a multiple of 3 since we are using RGB values, so include that as well
-    tLeftover = ((len(fullBinaryStr) - 2) % chunkSize) // 8 * 3
+    if padIn != 0:
+        randStrToAdd = padIn
+    else:
+        tLeftover = (chunkSize*3 - ((len(fullBinaryStr) - 2) % chunkSize*3)) // 8
 
-    # Add randomized binary to the end. Doesn't actually matter what's here cuz we'll cut it off anyway
-    # But we should still do it, because it feels more secure lol
-    randBytes = random.randbytes(tLeftover)
-    randArray = bytearray(randBytes)
-    randList = []
-    for byte in randArray:
-        randList.append(int(byte))
-    randStrToAdd = ''
-    for i in randList:
-        randStrToAdd += _convertIntToBinary(i)[2::]
+        # Add randomized binary to the end. Doesn't actually matter what's here cuz we'll cut it off anyway
+        # But we should still do it, because it feels more secure lol
+        randBytes = random.randbytes(tLeftover)
+        randArray = bytearray(randBytes)
+        randList = []
+        for byte in randArray:
+            randList.append(int(byte))
+        randStrToAdd = ''
+        for i in randList:
+            randStrToAdd += _convertIntToBinary(i)[2::]
 
     # Now add it to the string
     fullBinaryStr += randStrToAdd
@@ -200,6 +207,8 @@ def _convertBinaryChunksToRgbTuples(binChunks):
     # Convert binary chunks to rgb values
     rgbList = []
     for chunk in binChunks:
+        if len(chunk) != 512:
+            print(len(chunk))
         subChunks = [chunk[i:i + 8] for i in range(0, len(chunk), 8)]
         for s in subChunks:
             rgbList.append(int(s, 2))
@@ -585,7 +594,9 @@ def decrypt(imageLoc, saveLoc, aMode, key, IV=-1, bcType='AES', imHash = -1, pad
         K = _convertKeyToFourKeys(key)
 
         # Convert original image to binary
-        x = _convertImageToBinaryChunks(imageLoc)
+        if padIn == -1:
+            padIn = 0
+        x = _convertImageToBinaryChunks(imageLoc, padIn=padIn)
         binChunks = x[0]
         imSize = x[1]
 
