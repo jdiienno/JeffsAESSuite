@@ -165,7 +165,7 @@ def _convertImageToBinaryChunks(imageLoc, chunkSize = 512, padIn=0):
 
         # Add randomized binary to the end. Doesn't actually matter what's here cuz we'll cut it off anyway
         # But we should still do it, because it feels more secure lol
-        randBytes = random.randbytes(tLeftover)
+        randBytes = random.SystemRandom().randbytes(tLeftover)
         randArray = bytearray(randBytes)
         randList = []
         for byte in randArray:
@@ -457,7 +457,7 @@ def encrypt(imageLoc, saveLoc, aMode, key=-1, IV=-1, bcType='AES'):
 
     # Handle missing key
     if key == -1:
-        key = str(random.randint(0, 2**256-1))
+        key = str(random.SystemRandom().randint(0, 2**256-1))
     if bcType == 'feistel':
         key = str(key)
         keyToReturn = key
@@ -472,7 +472,7 @@ def encrypt(imageLoc, saveLoc, aMode, key=-1, IV=-1, bcType='AES'):
 
         # Handle missing IV
         if IV == -1 and aMode != 'ebc':
-            IVint = random.randint(0, 2**256-1)
+            IVint = random.SystemRandom().randint(0, 2**256-1)
         else:
             # Convert IV to integer
             IVint = int(''.join(str(ord(c)) for c in IV))
