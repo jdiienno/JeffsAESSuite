@@ -1,8 +1,9 @@
 # Import Stuff: ********************************************************************************************************
 import hashlib
 from PIL import Image
-import random
+from Crypto.Util.number import *
 from Crypto.Cipher import AES
+from Crypto import Random
 
 # "Private" Functions: *************************************************************************************************
 ########################################################################################################################
@@ -58,7 +59,7 @@ def _feistelEncrpytion(valIn, K):
     binIn = list(_convertIntToBinary(valIn, 512))
 
     # define number of iterations
-    numIts = 5000
+    numIts = 1
 
     # Split into left and right parts
     Rstring = '0b' + _listToString(binIn[258:514])
@@ -102,7 +103,7 @@ def _feistelDecrpytion(valIn, K):
     Rstring = '0b' + _listToString(binIn[2:258])
 
     # Define Number of iterations
-    numIts = 5000
+    numIts = 1
 
     # Get F0
     F = _superHash(str(_convertBinaryToInt(Lstring)), K[3], numIts)
@@ -165,7 +166,7 @@ def _convertImageToBinaryChunks(imageLoc, chunkSize = 512, padIn=0):
 
         # Add randomized binary to the end. Doesn't actually matter what's here cuz we'll cut it off anyway
         # But we should still do it, because it feels more secure lol
-        randBytes = random.SystemRandom().randbytes(tLeftover)
+        randBytes = Random.get_random_bytes(tLeftover)
         randArray = bytearray(randBytes)
         randList = []
         for byte in randArray:
@@ -457,7 +458,7 @@ def encrypt(imageLoc, saveLoc, aMode, key=-1, IV=-1, bcType='AES'):
 
     # Handle missing key
     if key == -1:
-        key = str(random.SystemRandom().randint(0, 2**256-1))
+        key = str(getRandomRange(0, 2**256-1))
     if bcType == 'feistel':
         key = str(key)
         keyToReturn = key
@@ -472,7 +473,7 @@ def encrypt(imageLoc, saveLoc, aMode, key=-1, IV=-1, bcType='AES'):
 
         # Handle missing IV
         if IV == -1 and aMode != 'ebc':
-            IVint = random.SystemRandom().randint(0, 2**256-1)
+            IVint = getRandomRange(0, 2**256-1)
         else:
             # Convert IV to integer
             IVint = int(''.join(str(ord(c)) for c in IV))
