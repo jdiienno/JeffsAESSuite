@@ -1,3 +1,5 @@
+Note: The superhash function in the Feistel Network has been reduced from 5000 iterations to 1 iteration in the interest of saving time.
+
 ****************
 * Requirements *
 ****************
